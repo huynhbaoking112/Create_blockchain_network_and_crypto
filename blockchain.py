@@ -1,5 +1,6 @@
-import hashlib
+import hashlib, json
 from datetime import datetime, timedelta
+
 
 class Block:
     def __init__(self, data):
@@ -11,7 +12,7 @@ class Block:
 
 def hash(block):
 
-    data =  block.data + block.prev_hash + str(block.nonce)
+    data = json.dumps(block.data) + block.prev_hash + str(block.nonce)
     data = data.encode('utf-8')
         
     return hashlib.sha256(data).hexdigest()
@@ -31,7 +32,7 @@ class Blockchain:
         block.prev_hash = self.chain[-1].hash
 
         start = datetime.now()
-        while hash(block).startswith("000000") == False:
+        while hash(block).startswith("00") == False:
             block.nonce+=1
         end = datetime.now()
         block.hash = hash(block)
@@ -54,17 +55,39 @@ class Blockchain:
                 print(self.chain[i].data)
                 print(i)
                 break
-        
+    def get_balance(self, person):
+            balance = 0
+            for block in self.chain:
+                if type(block.data)!=list :
+                    continue
+                for transfer in block.data:
+                    if transfer["from"] == person:
+                        balance = balance - transfer["amount"]
+                    if transfer["to"] == person:
+                        balance = balance + transfer["amount"]
+            return balance
 
 blockchain = Blockchain()
-blockchain.add_block("King Huynh")
-blockchain.add_block("King Huynh2")
-blockchain.add_block("King Huynh3")
+blockchain.add_block([
+    {
+    "from":"King Huynh",
+    "to":"Sang",
+    "amount":1000
+    },
+    {
+    "from":"King Huynh",
+    "to":"Dat",
+    "amount":2000
+    },
+    {
+    "from":"Dat",
+    "to":"Sang",
+    "amount":2000
+    },
 
-# blockchain.chain[2].data = "Thay"
-
-# blockchain.is_Valid()
+])
 
 
+print(blockchain.get_balance("Sang"))
 
-blockchain.print()
+# blockchain.print()
